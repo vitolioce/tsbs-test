@@ -3,7 +3,7 @@
  * Gestisce lo stato della griglia e delle forme posizionate
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { GridEngine } from '../engine/GridEngine';
 import { PlacedShape, Position, ValidationResult, GridConfig } from '../types';
 
@@ -12,7 +12,7 @@ interface UseGridManagerProps {
 }
 
 export const useGridManager = ({ config }: UseGridManagerProps) => {
-  const { rows, cols, cellSize } = config;
+  const { rows, cols } = config;
   
   // Istanza del GridEngine
   const gridEngineRef = useRef<GridEngine>(new GridEngine(rows, cols));
@@ -99,7 +99,7 @@ export const useGridManager = ({ config }: UseGridManagerProps) => {
     };
 
     // Valida posizionamento
-    const validation = gridEngine.validatePlacement(updatedShape.matrix, position);
+    //const validation = gridEngine.validatePlacement(updatedShape.matrix, position);
     
     // Posiziona sempre (anche con sovrapposizione), ma non se fuori griglia
     const placed = gridEngine.placeShape(updatedShape, true); // force = true
