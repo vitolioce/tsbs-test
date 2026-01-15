@@ -67,3 +67,29 @@ body {
   background: #555;
 }
 
+/* Responsive - Mobile optimizations */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+    -webkit-tap-highlight-color: transparent; /* Rimuove highlight su tap mobile */
+  }
+  
+  /* Scrollbar più sottile su mobile */
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  /* Migliora touch targets */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Responsive - Tablet */
+@media (min-width: 769px) and (max-width: 1024px) {
+  body {
+    font-size: 15px;
+  }
+}
+

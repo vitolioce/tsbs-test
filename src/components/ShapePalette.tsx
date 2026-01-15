@@ -4,15 +4,18 @@
  * Supporta drag & drop diretto
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ShapeDefinition } from '../types';
 
 interface ShapePaletteProps {
   shapes: ShapeDefinition[];
   onAddShape: (shapeId: string) => void;
+  isMobile?: boolean;
 }
 
-export const ShapePalette: React.FC<ShapePaletteProps> = ({ shapes, onAddShape }) => {
+export const ShapePalette: React.FC<ShapePaletteProps> = ({ shapes, onAddShape, isMobile = false }) => {
+  const [isOpen, setIsOpen] = useState(!isMobile);
+
   /**
    * Handler per inizio drag da pannello
    */
@@ -71,40 +74,67 @@ export const ShapePalette: React.FC<ShapePaletteProps> = ({ shapes, onAddShape }
     );
   };
 
-  return (
-    <div style={styles.palette}>
-      <h2 style={styles.title}>Forme Disponibili</h2>
-      <p style={styles.subtitle}>Clicca per aggiungere alla griglia</p>
-      
-      <div style={styles.shapeList}>
-        {shapes.map(shape => (
-          <div
-            key={shape.id}
-            style={styles.shapeCard}
-            draggable={true}
-            onDragStart={(e) => handleDragStart(e, shape.id)}
-            onDragEnd={handleDragEnd}
-            onClick={() => onAddShape(shape.id)}
-            title="Click per aggiungere o trascina sulla griglia"
-          >
-            <div style={styles.preview}>
-              {renderShapePreview(shape.matrix, shape.color)}
-            </div>
-            <div style={styles.shapeName}>{shape.name}</div>
-          </div>
-        ))}
-      </div>
+  // Stili dinamici basati su mobile/collapse state
+  const paletteStyle = {
+    ...styles.palette,
+    ...(isMobile ? styles.paletteMobile : {}),
+    ...(isMobile && !isOpen ? styles.paletteCollapsed : {}),
+  };
 
-      <div style={styles.instructions}>
-        <h3 style={styles.instructionsTitle}>Istruzioni</h3>
-        <ul style={styles.instructionsList}>
-          <li><strong>Click</strong> su una forma per aggiungerla</li>
-          <li><strong>Trascina</strong> direttamente sulla griglia</li>
-          <li><strong>Passa il mouse</strong> su una forma e clicca ❌ per rimuoverla</li>
-          <li>🟢 Verde = posizione valida durante drag</li>
-          <li>🔴 Rosso temporaneo = posizione non valida durante drag</li>
-          <li>🔴 Rosso permanente = forme sovrapposte</li>
-        </ul>
+  const contentStyle = {
+    ...styles.content,
+    display: isOpen ? 'block' : 'none',
+  };
+
+  return (
+    <div style={paletteStyle}>
+      {isMobile && (
+        <button
+          style={styles.toggleButton}
+          onClick={() => setIsOpen(!isOpen)}
+          aria-label={isOpen ? 'Chiudi menu' : 'Apri menu'}
+        >
+          {isOpen ? '✕' : '☰'}
+        </button>
+      )}
+      
+      <div style={contentStyle}>
+        <h2 style={styles.title}>Forme Disponibili</h2>
+        <p style={styles.subtitle}>Clicca per aggiungere alla griglia</p>
+        
+        <div style={styles.shapeList}>
+          {shapes.map(shape => (
+            <div
+              key={shape.id}
+              style={styles.shapeCard}
+              draggable={true}
+              onDragStart={(e) => handleDragStart(e, shape.id)}
+              onDragEnd={handleDragEnd}
+              onClick={() => {
+                onAddShape(shape.id);
+                if (isMobile) setIsOpen(false);
+              }}
+              title="Click per aggiungere o trascina sulla griglia"
+            >
+              <div style={styles.preview}>
+                {renderShapePreview(shape.matrix, shape.color)}
+              </div>
+              <div style={styles.shapeName}>{shape.name}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={styles.instructions}>
+          <h3 style={styles.instructionsTitle}>Istruzioni</h3>
+          <ul style={styles.instructionsList}>
+            <li><strong>Click</strong> su una forma per aggiungerla</li>
+            <li><strong>Trascina</strong> direttamente sulla griglia</li>
+            <li><strong>Passa il mouse</strong> su una forma e clicca ❌ per rimuoverla</li>
+            <li>🟢 Verde = posizione valida durante drag</li>
+            <li>🔴 Rosso temporaneo = posizione non valida durante drag</li>
+            <li>🔴 Rosso permanente = forme sovrapposte</li>
+          </ul>
+        </div>
       </div>
     </div>
   );
@@ -119,6 +149,42 @@ const styles = {
     borderRight: '2px solid #dee2e6',
     overflowY: 'auto' as const,
     height: '100vh',
+    position: 'relative' as const,
+    transition: 'all 0.3s ease',
+  },
+  paletteMobile: {
+    position: 'fixed' as const,
+    top: 0,
+    left: 0,
+    width: '100%',
+    maxWidth: '300px',
+    zIndex: 1000,
+    boxShadow: '2px 0 10px rgba(0,0,0,0.1)',
+  },
+  paletteCollapsed: {
+    width: '50px',
+    padding: '10px',
+  },
+  toggleButton: {
+    position: 'absolute' as const,
+    top: '10px',
+    right: '10px',
+    width: '40px',
+    height: '40px',
+    backgroundColor: '#007bff',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '20px',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1001,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+  },
+  content: {
+    display: 'block',
   },
   title: {
     fontSize: '20px',
