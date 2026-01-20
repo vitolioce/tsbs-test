@@ -46,39 +46,46 @@ export const ShapePalette: React.FC<ShapePaletteProps> = ({
   };
 
   /**
-   * Renderizza una preview SVG della forma
+   * Ottiene il path dell'immagine per una forma
    */
-  const renderShapePreview = (matrix: number[][], color: string) => {
-    const cellSize = 20;
+  const getShapeImagePath = (shapeId: string): string => {
+    const shapeMap: { [key: string]: string } = {
+      'I': '/shapes/shape-I.png',
+      'F': '/shapes/shape-F.png',
+      'Q': '/shapes/shape-Q.png',
+      'G': '/shapes/shape-G.png',
+      'L': '/shapes/shape-L.png',
+      'T': '/shapes/shape-T.png',
+      'O': '/shapes/shape-O.png',
+      'Z': '/shapes/shape-Z.png',
+      'S': '/shapes/shape-S.png',
+      'J': '/shapes/shape-J.png',
+      'U': '/shapes/shape-U.png'
+    };
+    return shapeMap[shapeId] || '/shapes/shape-I.png';
+  };
+
+  /**
+   * Calcola le dimensioni per la preview
+   */
+  const getPreviewDimensions = (matrix: number[][]) => {
     const rows = matrix.length;
     const cols = matrix[0].length;
-    const width = cols * cellSize;
-    const height = rows * cellSize;
-
-    return (
-      <svg width={width} height={height} style={{ display: 'block', margin: '0 auto' }}>
-        {matrix.map((row, r) =>
-          row.map((cell, c) => {
-            if (cell === 1) {
-              return (
-                <rect
-                  key={`${r}-${c}`}
-                  x={c * cellSize}
-                  y={r * cellSize}
-                  width={cellSize}
-                  height={cellSize}
-                  fill={color}
-                  stroke="#333"
-                  strokeWidth={1}
-                  rx={2}
-                />
-              );
-            }
-            return null;
-          })
-        )}
-      </svg>
-    );
+    const maxSize = 80; // Dimensione massima in px
+    const aspectRatio = cols / rows;
+    
+    let width, height;
+    if (aspectRatio > 1) {
+      // Più largo che alto
+      width = maxSize;
+      height = maxSize / aspectRatio;
+    } else {
+      // Più alto che largo
+      height = maxSize;
+      width = maxSize * aspectRatio;
+    }
+    
+    return { width, height };
   };
 
   // Se è mobile e chiuso, non renderizzare nulla
@@ -118,25 +125,41 @@ export const ShapePalette: React.FC<ShapePaletteProps> = ({
         <p style={styles.subtitle}>Clicca per aggiungere alla griglia</p>
         
         <div style={styles.shapeList}>
-          {shapes.map(shape => (
-            <div
-              key={shape.id}
-              style={styles.shapeCard}
-              draggable={true}
-              onDragStart={(e) => handleDragStart(e, shape.id)}
-              onDragEnd={handleDragEnd}
-              onClick={() => {
-                onAddShape(shape.id);
-                if (isMobile && onClose) onClose();
-              }}
-              title="Click per aggiungere o trascina sulla griglia"
-            >
-              <div style={styles.preview}>
-                {renderShapePreview(shape.matrix, shape.color)}
+          {shapes.map(shape => {
+            const { width, height } = getPreviewDimensions(shape.matrix);
+            const imagePath = getShapeImagePath(shape.id);
+            
+            return (
+              <div
+                key={shape.id}
+                style={styles.shapeCard}
+                draggable={true}
+                onDragStart={(e) => handleDragStart(e, shape.id)}
+                onDragEnd={handleDragEnd}
+                onClick={() => {
+                  onAddShape(shape.id);
+                  if (isMobile && onClose) onClose();
+                }}
+                title="Click per aggiungere o trascina sulla griglia"
+              >
+                <div style={styles.preview}>
+                  <img 
+                    src={imagePath} 
+                    alt={shape.name}
+                    style={{
+                      width: `${width}px`,
+                      height: `${height}px`,
+                      display: 'block',
+                      margin: '0 auto',
+                      imageRendering: 'crisp-edges'
+                    }}
+                    draggable={false}
+                  />
+                </div>
+                <div style={styles.shapeName}>{shape.name}</div>
               </div>
-              <div style={styles.shapeName}>{shape.name}</div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div style={styles.instructions}>

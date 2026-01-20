@@ -28,6 +28,7 @@ const getShapeImagePath = (shapeId: string): string => {
   const shapeMap: { [key: string]: string } = {
     'I': '/shapes/shape-I.png',
     'F': '/shapes/shape-F.png',
+    'Q': '/shapes/shape-Q.png',
     'G': '/shapes/shape-G.png',
     'L': '/shapes/shape-L.png',
     'T': '/shapes/shape-T.png',
@@ -35,8 +36,7 @@ const getShapeImagePath = (shapeId: string): string => {
     'Z': '/shapes/shape-Z.png',
     'S': '/shapes/shape-S.png',
     'J': '/shapes/shape-J.png',
-    'U': '/shapes/shape-U.png',
-    'Q': '/shapes/shape-Q.png'
+    'U': '/shapes/shape-U.png'
   };
   return shapeMap[shapeId] || '/shapes/shape-I.png';
 };
