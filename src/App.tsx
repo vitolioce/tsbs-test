@@ -206,7 +206,7 @@ function App() {
             )}
             <div>
               <h1 style={{...styles.appTitle, ...(isMobile ? styles.appTitleMobile : {})}}>
-                Grid Editor
+                Editor Griglia 2D
               </h1>
               {!isMobile && (
                 <p style={styles.appSubtitle}>
