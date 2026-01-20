@@ -6,6 +6,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { GridEngine } from '../engine/GridEngine';
 import { PlacedShape, Position, ValidationResult, GridConfig } from '../types';
+import { showNotification } from '../utils/notifications';
 
 interface UseGridManagerProps {
   config: GridConfig;
@@ -83,8 +84,24 @@ export const useGridManager = ({ config }: UseGridManagerProps) => {
   }, [gridEngine, placedShapes]);
 
   /**
+   * Cerca la prima posizione valida disponibile per una forma
+   */
+  const findFirstAvailablePosition = useCallback((shape: PlacedShape): Position | null => {
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const testPosition: Position = { row, col };
+        const validation = gridEngine.validatePlacement(shape.matrix, testPosition);
+        if (validation.valid) {
+          return testPosition;
+        }
+      }
+    }
+    return null; // Nessuna posizione disponibile
+  }, [gridEngine, rows, cols]);
+
+  /**
    * Handler: Fine drag (posizionamento)
-   * Permette posizionamento anche con sovrapposizione, marcando le forme in rosso
+   * Se la forma è fuori griglia (anche parzialmente), cerca una posizione valida o la rimuove
    */
   const handleDragEnd = useCallback((shapeId: string, position: Position) => {
     setDraggingShapeId(null);
@@ -99,9 +116,45 @@ export const useGridManager = ({ config }: UseGridManagerProps) => {
     };
 
     // Valida posizionamento
-    //const validation = gridEngine.validatePlacement(updatedShape.matrix, position);
+    const validation = gridEngine.validatePlacement(updatedShape.matrix, position);
     
-    // Posiziona sempre (anche con sovrapposizione), ma non se fuori griglia
+    // Se la forma è fuori dai limiti (anche parzialmente)
+    if (validation.reason === 'out-of-bounds') {
+      
+      // Cerca la prima posizione valida disponibile
+      const availablePosition = findFirstAvailablePosition(shape);
+      
+      if (availablePosition) {
+        // Posizione trovata! Riposiziona la forma
+        const repositionedShape: PlacedShape = {
+          ...shape,
+          position: availablePosition
+        };
+        
+        gridEngine.placeShape(repositionedShape, true);
+        
+        const newShapes = placedShapes.map(s => 
+          s.id === shapeId ? repositionedShape : s
+        );
+        
+        const shapesWithOverlapStatus = updateOverlapStatus(newShapes);
+        setPlacedShapes(shapesWithOverlapStatus);
+        
+        // Notifica l'utente
+        showNotification('⚠️ Forma riposizionata nella prima posizione disponibile', 'warning', 3000);
+      } else {
+        // Nessuna posizione disponibile: elimina la forma
+        const newShapes = placedShapes.filter(s => s.id !== shapeId);
+        const shapesWithOverlapStatus = updateOverlapStatus(newShapes);
+        setPlacedShapes(shapesWithOverlapStatus);
+        
+        // Notifica l'utente
+        showNotification('⚠️ Forma rimossa: griglia piena e nessuna posizione disponibile', 'error', 4000);
+      }
+      return;
+    }
+    
+    // Posizionamento normale (anche con sovrapposizione)
     const placed = gridEngine.placeShape(updatedShape, true); // force = true
     
     if (placed) {
@@ -115,10 +168,10 @@ export const useGridManager = ({ config }: UseGridManagerProps) => {
       
       setPlacedShapes(shapesWithOverlapStatus);
     } else {
-      // Solo se out-of-bounds: ripristina posizione originale
+      // Fallback: ripristina posizione originale
       gridEngine.placeShape(shape);
     }
-  }, [gridEngine, placedShapes, updateOverlapStatus]);
+  }, [gridEngine, placedShapes, updateOverlapStatus, findFirstAvailablePosition, rows, cols]);
 
   /**
    * Resetta tutta la griglia

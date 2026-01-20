@@ -29,10 +29,10 @@ const L_SHAPE: ShapeMatrix = [
  * ■ ■ ■
  * □ ■ □
  */
-const T_SHAPE: ShapeMatrix = [
+/* const T_SHAPE: ShapeMatrix = [
   [1, 1, 1],
   [0, 1, 0]
-];
+]; */
 
 /**
  * Forma O (quadrato)
@@ -59,10 +59,10 @@ const Z_SHAPE: ShapeMatrix = [
  * □ ■ ■
  * ■ ■ □
  */
-const S_SHAPE: ShapeMatrix = [
+/* const S_SHAPE: ShapeMatrix = [
   [1, 1],
   [1, 0]
-];
+]; */
 
 /**
  * Forma J (L invertita orizzontale)
@@ -79,10 +79,10 @@ const J_SHAPE: ShapeMatrix = [
  * ■ □ ■
  * ■ ■ ■
  */
-const U_SHAPE: ShapeMatrix = [
+/* const U_SHAPE: ShapeMatrix = [
   [1, 0, 1],
   [1, 1, 1]
-];
+]; */
 
 const F_SHAPE: ShapeMatrix = [
   [1],
@@ -93,13 +93,19 @@ const G_SHAPE: ShapeMatrix = [
   [1]
 ];
 
+const Q_SHAPE: ShapeMatrix = [
+  [0, 1, 0],
+  [1, 1, 1],
+  [1, 1, 1]
+];
+
 /**
  * Catalogo completo delle forme disponibili
  */
 export const SHAPE_DEFINITIONS: ShapeDefinition[] = [
   {
     id: 'I',
-    name: 'Baguette',
+    name: 'Gems',
     matrix: I_SHAPE,
     color: '#00f0f0' // Cyan
   },
@@ -108,6 +114,12 @@ export const SHAPE_DEFINITIONS: ShapeDefinition[] = [
     name: 'Oscar',
     matrix: F_SHAPE,
     color: '#00ff00' // Green
+  },
+  {
+    id: 'Q',
+    name: 'Potion',
+    matrix: Q_SHAPE,
+    color: '#f5d2f2' // Red
   },
   {
     id: 'G',
@@ -121,12 +133,12 @@ export const SHAPE_DEFINITIONS: ShapeDefinition[] = [
     matrix: L_SHAPE,
     color: '#f0a000' // Orange
   },
-  {
+  /* {
     id: 'T',
     name: 'T-Shape',
     matrix: T_SHAPE,
     color: '#a000f0' // Purple
-  },
+  }, */
   {
     id: 'O',
     name: 'O-Shape',
@@ -139,24 +151,24 @@ export const SHAPE_DEFINITIONS: ShapeDefinition[] = [
     matrix: Z_SHAPE,
     color: '#f00000' // Red
   },
-  {
+  /* {
     id: 'S',
     name: 'S-Shape',
     matrix: S_SHAPE,
     color: '#00f000' // Green
-  },
+  }, */
   {
     id: 'J',
     name: 'J-Shape',
     matrix: J_SHAPE,
     color: '#0000f0' // Blue
   },
-  {
+  /* {
     id: 'U',
     name: 'U-Shape',
     matrix: U_SHAPE,
     color: '#ff69b4' // Pink
-  },
+  }, */
   
 ];
 

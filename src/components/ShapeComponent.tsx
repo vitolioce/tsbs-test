@@ -3,11 +3,12 @@
  * Renderizza una singola forma con drag & drop usando un'immagine unica per forma
  */
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Group, Image, Rect } from 'react-konva';
 import Konva from 'konva';
 import { PlacedShape, Position, GridConfig, ValidationResult } from '../types';
 import useImage from 'use-image';
+import { showNotification } from '../utils/notifications';
 
 interface ShapeComponentProps {
   shape: PlacedShape;
@@ -32,7 +33,8 @@ const getShapeImagePath = (shapeId: string): string => {
     'Z': '/shapes/shape-Z.png',
     'S': '/shapes/shape-S.png',
     'J': '/shapes/shape-J.png',
-    'U': '/shapes/shape-U.png'
+    'U': '/shapes/shape-U.png',
+    'Q': '/shapes/shape-Q.png'
   };
   return shapeMap[shapeId] || '/shapes/shape-I.png';
 };
@@ -53,6 +55,8 @@ export const ShapeComponent: React.FC<ShapeComponentProps> = ({
     valid: true,
     reason: 'valid'
   });
+  const [isLongPressing, setIsLongPressing] = useState(false);
+  const longPressTimerRef = useRef<number | null>(null);
 
   // Carica l'immagine UNICA della forma
   const shapeImagePath = getShapeImagePath(shape.shapeId);
@@ -68,8 +72,30 @@ export const ShapeComponent: React.FC<ShapeComponentProps> = ({
   const startX = shape.position.col * totalCellSize;
   const startY = shape.position.row * totalCellSize;
 
+  // Effetto per sincronizzare la posizione del nodo Konva con lo stato
+  // Necessario quando la forma viene riposizionata automaticamente
+  useEffect(() => {
+    if (groupRef.current && !isDragging) {
+      const currentX = groupRef.current.x();
+      const currentY = groupRef.current.y();
+      
+      // Se la posizione del nodo è diversa da quella dello stato, resetta
+      if (currentX !== startX || currentY !== startY) {
+        groupRef.current.x(startX);
+        groupRef.current.y(startY);
+        groupRef.current.getLayer()?.batchDraw();
+      }
+    }
+  }, [shape.position.row, shape.position.col, startX, startY, isDragging]);
+
   // Handler drag start
   const handleDragStart = () => {
+    // Cancella il timer del long press se inizia il drag
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    setIsLongPressing(false);
     setIsDragging(true);
     onDragStart(shape.id);
   };
@@ -105,29 +131,72 @@ export const ShapeComponent: React.FC<ShapeComponentProps> = ({
     const row = Math.floor(y / totalCellSize);
     const gridPosition: Position = { row, col };
 
-    onDragEnd(shape.id, gridPosition);
+    // Importante: setta isDragging a false PRIMA di chiamare onDragEnd
+    // così l'effetto di sincronizzazione può funzionare correttamente
     setIsDragging(false);
     setValidationState({ valid: true, reason: 'valid' });
+    
+    // Chiama onDragEnd che potrebbe modificare la posizione dello stato
+    onDragEnd(shape.id, gridPosition);
   };
 
   // Handler click destro: rimuove la forma
   const handleContextMenu = (e: Konva.KonvaEventObject<PointerEvent>) => {
     e.evt.preventDefault(); // Previene menu contestuale browser
     
-    // Conferma prima di rimuovere
-    if (window.confirm('Vuoi rimuovere questa forma dalla griglia?')) {
-      onRemove(shape.id);
-    }
+    // Rimuove la forma direttamente
+    onRemove(shape.id);
+    showNotification('🗑️ Forma rimossa dalla griglia', 'info', 2000);
   };
 
-  // Stato hover per mostrare pulsante rimozione
+  // Stato hover per mostrare pulsante rimozione (solo desktop)
   const [isHovered, setIsHovered] = useState(false);
 
-  // Determina opacità e overlay in base allo stato drag e sovrapposizione
+  /**
+   * Handler per long press (mobile)
+   * Inizia il timer per rilevare un tap lungo
+   */
+  const handleTouchStart = () => {
+    setIsLongPressing(false);
+    longPressTimerRef.current = setTimeout(() => {
+      setIsLongPressing(true);
+      // Rimuovi la forma dopo long press
+      onRemove(shape.id);
+      showNotification('🗑️ Forma rimossa con tap lungo', 'info', 2000);
+    }, 600); // 600ms per il long press
+  };
+
+  /**
+   * Handler per cancellare il long press se l'utente rilascia o muove
+   */
+  const handleTouchEnd = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    setIsLongPressing(false);
+  };
+
+  /**
+   * Cleanup del timer quando il componente viene smontato
+   */
+  useEffect(() => {
+    return () => {
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Determina opacità e overlay in base allo stato drag, sovrapposizione e long press
   let opacity = 1;
   let overlayColor = null;
 
-  if (isDragging) {
+  if (isLongPressing) {
+    // Durante long press: arancione per indicare rimozione imminente
+    opacity = 0.7;
+    overlayColor = 'rgba(255, 152, 0, 0.6)'; // Arancione trasparente
+  } else if (isDragging) {
     // Durante drag: verde se valido, rosso se non valido
     opacity = 0.85;
     if (validationState.valid) {
@@ -144,6 +213,7 @@ export const ShapeComponent: React.FC<ShapeComponentProps> = ({
   const handleRemoveClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
     e.cancelBubble = true; // Previene drag
     onRemove(shape.id);
+    showNotification('🗑️ Forma rimossa dalla griglia', 'info', 2000);
   };
 
   return (
@@ -158,6 +228,9 @@ export const ShapeComponent: React.FC<ShapeComponentProps> = ({
       onContextMenu={handleContextMenu}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchMove={handleTouchEnd}
     >
       {/* Immagine unica della forma */}
       {shapeImage ? (

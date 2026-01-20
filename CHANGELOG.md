@@ -1,116 +1,84 @@
-# Changelog
+# Changelog - Grid Editor
 
-Tutte le modifiche notevoli al progetto saranno documentate in questo file.
+## [v1.2.0] - 2026-01-20
 
-Il formato si basa su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/),
-e questo progetto aderisce al [Semantic Versioning](https://semver.org/lang/it/).
+### ✨ Nuova Funzionalità: Long Press per Rimozione Mobile
+**Problema:** Su mobile non c'è hover né tasto destro per rimuovere le forme.
+
+**Soluzione:**
+- **Long press (tap lungo)** sulle forme per rimuoverle su dispositivi touch
+- **Feedback visivo** arancione durante il long press
+- **Timer di 600ms** per evitare rimozioni accidentali
+- **Notifica toast** alla rimozione
+- **Istruzioni aggiornate** nella UI per mobile e desktop
+
+### 🎨 Sistema Notifiche Unificato
+- **Eliminati tutti** `window.confirm()` e `alert()`
+- **Toast notifications** per tutte le azioni (successo, info, warning, error)
+- **UX non bloccante** e moderna
 
 ---
 
-## [1.0.0] - 2026-01-12
+## [v1.1.0] - 2026-01-20
 
-### ✨ Aggiunto
+### 🐛 Bug Fix: Gestione Forme Fuori Griglia
+**Problema risolto:** Le forme trascinate fuori dalla griglia (anche parzialmente) causavano errori di posizionamento e venivano contate incorrettamente.
 
-- **Core Features**
-  - Griglia 2D (10x10) interattiva con Konva.js
-  - 7 forme Tetris complete (I, L, T, O, Z, S, J)
-  - Sistema drag & drop fluido con snapping automatico
-  - Collision detection in tempo reale
-  - Validazione posizionamento (out-of-bounds + sovrapposizione)
+**Soluzione implementata:**
+1. **Rilevamento automatico:** Quando una forma viene trascinata fuori dai limiti della griglia (anche solo parzialmente), il sistema la rileva immediatamente
+2. **Riposizionamento intelligente:** Il sistema cerca automaticamente la prima posizione valida disponibile nella griglia
+3. **Rimozione automatica:** Se non c'è spazio disponibile, la forma viene rimossa automaticamente
+4. **Notifiche user-friendly:** Messaggi toast eleganti informano l'utente delle azioni automatiche
+
+### ✨ Nuove Funzionalità
+- **Sistema di notifiche toast:** Sostituiti gli alert con notifiche toast eleganti e non invasive
+- **Algoritmo di ricerca posizione:** Nuovo algoritmo che scorre la griglia sistematicamente per trovare spazi disponibili
+- **Logging console:** Messaggi di debug per tracciare il comportamento del sistema
+
+### 📝 File Modificati
+- `src/hooks/useGridManager.ts`: 
+  - Aggiunta funzione `findFirstAvailablePosition()`
+  - Refactoring completo di `handleDragEnd()` con gestione out-of-bounds
+  - Integrazione sistema notifiche toast
   
-- **Feedback Visivo**
-  - Colore verde per posizioni valide durante drag
-  - Colore rosso per posizioni non valide
-  - Animazioni smooth per interazioni
+- `src/components/ShapeComponent.tsx`:
+  - Aggiunto `useEffect` per sincronizzare posizione visiva Konva con stato React
+  - Corretto ordine chiamate in `handleDragEnd` per garantire aggiornamento UI
   
-- **UI/UX**
-  - Pannello laterale per selezione forme
-  - Preview SVG di ogni forma
-  - Info bar con statistiche real-time
-  - Pulsante reset con conferma
-  - Design moderno e responsive
+- `src/utils/notifications.ts` (nuovo):
+  - Utility per messaggi toast con animazioni
+  - Supporto per 4 tipi: info, warning, error, success
+  - Durata personalizzabile
+  
+- `src/App.tsx`:
+  - Sostituzione alert con notifiche toast
 
-- **Architettura**
-  - GridEngine per logica griglia
-  - ShapeDefinitions per modelli dati
-  - useGridManager custom hook per state management
-  - Componenti React modulari e riutilizzabili
-  - TypeScript strict mode per type safety
+### 🧪 Come Testare
+1. Avvia l'applicazione: `npm run dev`
+2. Aggiungi alcune forme alla griglia
+3. Trascina una forma completamente fuori dalla griglia → Dovrebbe riposizionarsi automaticamente
+4. Riempi la griglia completamente
+5. Trascina una forma fuori → Dovrebbe essere rimossa con notifica
 
-- **Documentazione**
-  - README.md completo con guida utilizzo
-  - ARCHITECTURE.md con spiegazione dettagliata
-  - Commenti inline nel codice
-  - Esempi per estensioni future
-
-### 🎯 Future Roadmap (Non implementato)
-
-- [ ] Rotazione pezzi (tasto R)
-- [ ] Undo/Redo con stack history
-- [ ] Save/Load stato in localStorage
-- [ ] Griglia dinamica (dimensioni configurabili)
-- [ ] Forme personalizzate con editor visuale
-- [ ] Multi-selezione forme
-- [ ] Export/Import come JSON/PNG
-- [ ] Mobile touch support
-- [ ] Keyboard shortcuts avanzati
-- [ ] Modalità dark mode
-- [ ] Tutorial interattivo
+### 📋 Comportamenti Attesi
+- ✅ Forma trascinata fuori griglia → riposizionata nella prima posizione libera
+- ✅ Griglia piena + forma fuori → forma rimossa automaticamente
+- ✅ Notifica toast visualizzata per 3-4 secondi
+- ✅ Colore notifica: giallo (warning) per riposizionamento, rosso (error) per rimozione
+- ✅ Nessun errore in console
+- ✅ Conteggio forme sempre corretto
 
 ---
 
-## Versioni Future
+## [v1.0.0] - Responsive Design
 
-### [1.1.0] - Planned
+### ✨ Nuove Funzionalità Responsive
+- **Hook `useResponsive`:** Gestione breakpoint mobile/tablet/desktop
+- **Griglia dinamica:** Celle che si adattano alle dimensioni dello schermo
+- **Menu mobile:** Sidebar collapsabile con pulsante hamburger
+- **Layout adattivo:** Ottimizzazioni per touch screen e dispositivi mobili
 
-**Focus**: Miglioramenti UX e rotazione
-
-- Implementazione rotazione pezzi
-- Keyboard shortcuts (R, Delete, Ctrl+Z)
-- Animazioni transizione
-- Sound effects (optional)
-
-### [1.2.0] - Planned
-
-**Focus**: Persistenza e history
-
-- Undo/Redo completo
-- Auto-save in localStorage
-- Export/Import configurazioni
-- Multiple grid presets
-
-### [2.0.0] - Planned
-
-**Focus**: Editor avanzato
-
-- Forme personalizzate
-- Griglia dinamica
-- Multi-layer support
-- Collaborative editing (WebSocket)
-
----
-
-## Template per Versioni Future
-
-```markdown
-## [X.Y.Z] - YYYY-MM-DD
-
-### Added
-- Nuove funzionalità
-
-### Changed
-- Modifiche a funzionalità esistenti
-
-### Deprecated
-- Funzionalità in via di dismissione
-
-### Removed
-- Funzionalità rimosse
-
-### Fixed
-- Bug fix
-
-### Security
-- Fix di sicurezza
-```
-
+### 📱 Breakpoints
+- Mobile: < 768px
+- Tablet: 768px - 1024px
+- Desktop: > 1024px

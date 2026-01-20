@@ -3,7 +3,7 @@
  * Orchestrazione principale dell'applicazione
  */
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Stage, Layer } from 'react-konva';
 import { GridCanvas } from './components/GridCanvas';
 import { ShapeComponent } from './components/ShapeComponent';
@@ -12,6 +12,7 @@ import { useGridManager } from './hooks/useGridManager';
 import { useResponsive } from './hooks/useResponsive';
 import { SHAPE_DEFINITIONS, getShapeById } from './models/ShapeDefinitions';
 import { GridConfig, PlacedShape } from './types';
+import { showNotification } from './utils/notifications';
 
 // Configurazione base della griglia (celle)
 const BASE_GRID_CONFIG = {
@@ -23,6 +24,9 @@ const BASE_GRID_CONFIG = {
 function App() {
   // Hook per gestire la responsività
   const { isMobile, windowWidth, windowHeight } = useResponsive();
+  
+  // Stato per gestire apertura/chiusura menu mobile
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Calcola dimensioni celle dinamicamente in base allo schermo
   const gridConfig: GridConfig = useMemo(() => {
@@ -96,7 +100,7 @@ function App() {
     }
 
     if (!placed) {
-      alert('Griglia piena! Nessuno spazio disponibile per questa forma.');
+      showNotification('❌ Griglia piena! Nessuno spazio disponibile per questa forma.', 'error', 4000);
     }
   }, [addShape]);
 
@@ -105,9 +109,10 @@ function App() {
    */
   const handleReset = useCallback(() => {
     if (placedShapes.length > 0) {
-      if (window.confirm('Vuoi resettare la griglia?')) {
-        reset();
-      }
+      reset();
+      showNotification('✅ Griglia resettata con successo', 'success', 2500);
+    } else {
+      showNotification('ℹ️ La griglia è già vuota', 'info', 2000);
     }
   }, [placedShapes.length, reset]);
 
@@ -161,21 +166,44 @@ function App() {
         shapes={SHAPE_DEFINITIONS}
         onAddShape={handleAddShape}
         isMobile={isMobile}
+        isOpen={isMobile ? isMobileMenuOpen : true}
+        onClose={() => setIsMobileMenuOpen(false)}
       />
 
       {/* Area principale con canvas e controlli */}
       <div style={styles.mainArea}>
         {/* Header con titolo e controlli */}
         <div style={headerStyle}>
-          <div>
-            <h1 style={{...styles.appTitle, ...(isMobile ? styles.appTitleMobile : {})}}>
-              Grid Editor
-            </h1>
-            {!isMobile && (
-              <p style={styles.appSubtitle}>
-                Editor 2D interattivo con drag & drop e snapping automatico
-              </p>
+          <div style={styles.headerLeft}>
+            {/* Hamburger menu solo su mobile */}
+            {isMobile && (
+              <button
+                style={styles.hamburgerButton}
+                onClick={() => setIsMobileMenuOpen(true)}
+                aria-label="Apri menu forme"
+                onMouseDown={(e) => {
+                  e.currentTarget.style.backgroundColor = '#0056b3';
+                }}
+                onMouseUp={(e) => {
+                  e.currentTarget.style.backgroundColor = '#007bff';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#007bff';
+                }}
+              >
+                ☰
+              </button>
             )}
+            <div>
+              <h1 style={{...styles.appTitle, ...(isMobile ? styles.appTitleMobile : {})}}>
+                Grid Editor
+              </h1>
+              {!isMobile && (
+                <p style={styles.appSubtitle}>
+                  Editor 2D interattivo con drag & drop e snapping automatico
+                </p>
+              )}
+            </div>
           </div>
           <div style={styles.controls}>
             <button
@@ -208,11 +236,13 @@ function App() {
               ⚠️ {isMobile ? '' : 'Attenzione: '}{placedShapes.filter(s => s.hasOverlap).length} sovrapposte!
             </div>
           )}
-          {!isMobile && (
-            <div style={styles.infoItem}>
-              💡 <em>Passa il mouse su una forma per rimuoverla</em>
-            </div>
-          )}
+          <div style={styles.infoItem}>
+            {isMobile ? (
+              <>💡 <em>Tap lungo su una forma per rimuoverla</em></>
+            ) : (
+              <>💡 <em>Passa il mouse su una forma per rimuoverla</em></>
+            )}
+          </div>
         </div>
 
         {/* Canvas Konva */}
@@ -285,6 +315,26 @@ const styles = {
   headerMobile: {
     padding: '12px 15px',
     flexWrap: 'wrap' as const,
+  },
+  headerLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+  },
+  hamburgerButton: {
+    width: '40px',
+    height: '40px',
+    backgroundColor: '#007bff',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '24px',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+    transition: 'background-color 0.2s',
   },
   appTitle: {
     margin: 0,

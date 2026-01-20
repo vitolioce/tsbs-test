@@ -4,17 +4,24 @@
  * Supporta drag & drop diretto
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { ShapeDefinition } from '../types';
 
 interface ShapePaletteProps {
   shapes: ShapeDefinition[];
   onAddShape: (shapeId: string) => void;
   isMobile?: boolean;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export const ShapePalette: React.FC<ShapePaletteProps> = ({ shapes, onAddShape, isMobile = false }) => {
-  const [isOpen, setIsOpen] = useState(!isMobile);
+export const ShapePalette: React.FC<ShapePaletteProps> = ({ 
+  shapes, 
+  onAddShape, 
+  isMobile = false,
+  isOpen = true,
+  onClose
+}) => {
 
   /**
    * Handler per inizio drag da pannello
@@ -74,31 +81,39 @@ export const ShapePalette: React.FC<ShapePaletteProps> = ({ shapes, onAddShape, 
     );
   };
 
-  // Stili dinamici basati su mobile/collapse state
+  // Se è mobile e chiuso, non renderizzare nulla
+  if (isMobile && !isOpen) {
+    return null;
+  }
+
+  // Stili dinamici basati su mobile
   const paletteStyle = {
     ...styles.palette,
     ...(isMobile ? styles.paletteMobile : {}),
-    ...(isMobile && !isOpen ? styles.paletteCollapsed : {}),
-  };
-
-  const contentStyle = {
-    ...styles.content,
-    display: isOpen ? 'block' : 'none',
   };
 
   return (
-    <div style={paletteStyle}>
-      {isMobile && (
-        <button
-          style={styles.toggleButton}
-          onClick={() => setIsOpen(!isOpen)}
-          aria-label={isOpen ? 'Chiudi menu' : 'Apri menu'}
-        >
-          {isOpen ? '✕' : '☰'}
-        </button>
+    <>
+      {/* Overlay per chiudere il menu cliccando fuori (solo mobile) */}
+      {isMobile && isOpen && (
+        <div 
+          style={styles.overlay}
+          onClick={onClose}
+        />
       )}
       
-      <div style={contentStyle}>
+      <div style={paletteStyle}>
+        {/* Pulsante chiusura solo su mobile */}
+        {isMobile && (
+          <button
+            style={styles.closeButton}
+            onClick={onClose}
+            aria-label="Chiudi menu"
+          >
+            ✕
+          </button>
+        )}
+        
         <h2 style={styles.title}>Forme Disponibili</h2>
         <p style={styles.subtitle}>Clicca per aggiungere alla griglia</p>
         
@@ -112,7 +127,7 @@ export const ShapePalette: React.FC<ShapePaletteProps> = ({ shapes, onAddShape, 
               onDragEnd={handleDragEnd}
               onClick={() => {
                 onAddShape(shape.id);
-                if (isMobile) setIsOpen(false);
+                if (isMobile && onClose) onClose();
               }}
               title="Click per aggiungere o trascina sulla griglia"
             >
@@ -127,21 +142,31 @@ export const ShapePalette: React.FC<ShapePaletteProps> = ({ shapes, onAddShape, 
         <div style={styles.instructions}>
           <h3 style={styles.instructionsTitle}>Istruzioni</h3>
           <ul style={styles.instructionsList}>
-            <li><strong>Click</strong> su una forma per aggiungerla</li>
+            <li><strong>Click/Tap</strong> su una forma per aggiungerla</li>
             <li><strong>Trascina</strong> direttamente sulla griglia</li>
-            <li><strong>Passa il mouse</strong> su una forma e clicca ❌ per rimuoverla</li>
+            <li><strong>Tap lungo</strong> (mobile) o <strong>hover + ❌</strong> (desktop) per rimuovere</li>
             <li>🟢 Verde = posizione valida durante drag</li>
-            <li>🔴 Rosso temporaneo = posizione non valida durante drag</li>
-            <li>🔴 Rosso permanente = forme sovrapposte</li>
+            <li>🟠 Arancione = tap lungo per rimuovere</li>
+            <li>🔴 Rosso = posizione non valida o sovrapposizione</li>
           </ul>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
 // Stili inline per il componente
 const styles = {
+  overlay: {
+    position: 'fixed' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 999,
+    animation: 'fadeIn 0.3s ease-out',
+  },
   palette: {
     width: '250px',
     backgroundColor: '#f8f9fa',
@@ -150,41 +175,36 @@ const styles = {
     overflowY: 'auto' as const,
     height: '100vh',
     position: 'relative' as const,
-    transition: 'all 0.3s ease',
+    transition: 'transform 0.3s ease',
   },
   paletteMobile: {
     position: 'fixed' as const,
     top: 0,
     left: 0,
-    width: '100%',
-    maxWidth: '300px',
+    width: '85%',
+    maxWidth: '320px',
     zIndex: 1000,
-    boxShadow: '2px 0 10px rgba(0,0,0,0.1)',
+    boxShadow: '2px 0 20px rgba(0,0,0,0.3)',
+    animation: 'slideInLeft 0.3s ease-out',
   },
-  paletteCollapsed: {
-    width: '50px',
-    padding: '10px',
-  },
-  toggleButton: {
+  closeButton: {
     position: 'absolute' as const,
-    top: '10px',
-    right: '10px',
-    width: '40px',
-    height: '40px',
-    backgroundColor: '#007bff',
+    top: '15px',
+    right: '15px',
+    width: '36px',
+    height: '36px',
+    backgroundColor: '#dc3545',
     color: '#ffffff',
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: '50%',
     fontSize: '20px',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1001,
-    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-  },
-  content: {
-    display: 'block',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+    transition: 'background-color 0.2s',
   },
   title: {
     fontSize: '20px',
