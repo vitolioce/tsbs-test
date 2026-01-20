@@ -2,15 +2,22 @@
 
 ## [v1.2.0] - 2026-01-20
 
-### ✨ Nuova Funzionalità: Long Press per Rimozione Mobile
+### ✨ Nuova Funzionalità: Tap per Mostrare Pulsante Rimozione (Mobile)
 **Problema:** Su mobile non c'è hover né tasto destro per rimuovere le forme.
 
-**Soluzione:**
-- **Long press (tap lungo)** sulle forme per rimuoverle su dispositivi touch
-- **Feedback visivo** arancione durante il long press
-- **Timer di 600ms** per evitare rimozioni accidentali
-- **Notifica toast** alla rimozione
-- **Istruzioni aggiornate** nella UI per mobile e desktop
+**Soluzione implementata:**
+- **Singolo tap** sulla forma → Mostra pulsante ❌ grande (44x44px) al centro
+- **Tap sul pulsante ❌** → Rimuove la forma
+- **Tap altrove** (canvas vuoto o altra forma) → Nasconde il pulsante
+- **Pulsante centrato** e ben visibile, rispetta standard touch (min 44px)
+- **Desktop:** Rimane il comportamento hover + click ❌
+- **Mobile:** Pattern intuitivo usato da app native (Maps, Pinterest, ecc.)
+
+**Caratteristiche:**
+- Rileva tap rapidi (< 300ms) senza movimento significativo (< 10px)
+- Non interferisce con il drag: trascinamento ha priorità
+- Stato globale gestito in App.tsx per sincronizzazione tra forme
+- Pulsante nascosto automaticamente durante drag
 
 ### 🎨 Sistema Notifiche Unificato
 - **Eliminati tutti** `window.confirm()` e `alert()`

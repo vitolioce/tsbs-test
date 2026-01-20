@@ -27,6 +27,9 @@ function App() {
   
   // Stato per gestire apertura/chiusura menu mobile
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // Stato per gestire quale forma mostra il pulsante delete (mobile)
+  const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null);
 
   // Calcola dimensioni celle dinamicamente in base allo schermo
   const gridConfig: GridConfig = useMemo(() => {
@@ -115,6 +118,13 @@ function App() {
       showNotification('ℹ️ La griglia è già vuota', 'info', 2000);
     }
   }, [placedShapes.length, reset]);
+
+  /**
+   * Handler per deselezionare forme quando si clicca sul canvas vuoto
+   */
+  const handleCanvasClick = useCallback(() => {
+    setSelectedShapeId(null);
+  }, []);
 
   /**
    * Handler per drag over sul canvas (necessario per permettere drop)
@@ -238,7 +248,7 @@ function App() {
           )}
           <div style={styles.infoItem}>
             {isMobile ? (
-              <>💡 <em>Tap lungo su una forma per rimuoverla</em></>
+              <>💡 <em>Tap su una forma per mostrare il pulsante ❌</em></>
             ) : (
               <>💡 <em>Passa il mouse su una forma per rimuoverla</em></>
             )}
@@ -250,8 +260,9 @@ function App() {
           style={canvasContainerStyle}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
+          onClick={handleCanvasClick}
         >
-          <Stage width={canvasWidth} height={canvasHeight}>
+          <Stage width={canvasWidth} height={canvasHeight} onClick={handleCanvasClick}>
             {/* Layer 1: Griglia di sfondo */}
             <GridCanvas config={gridConfig} />
 
@@ -266,6 +277,8 @@ function App() {
                   onDragMove={handleDragMove}
                   onDragEnd={handleDragEnd}
                   onRemove={handleRemove}
+                  isSelected={selectedShapeId === shape.id}
+                  onSelect={() => setSelectedShapeId(shape.id)}
                 />
               ))}
             </Layer>

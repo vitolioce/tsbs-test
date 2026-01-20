@@ -4,7 +4,7 @@
  */
 
 import React, { useRef, useState, useEffect } from 'react';
-import { Group, Image, Rect } from 'react-konva';
+import { Group, Image, Rect, Line, Circle } from 'react-konva';
 import Konva from 'konva';
 import { PlacedShape, Position, GridConfig, ValidationResult } from '../types';
 import useImage from 'use-image';
@@ -16,7 +16,9 @@ interface ShapeComponentProps {
   onDragStart: (shapeId: string) => void;
   onDragMove: (shapeId: string, position: Position) => ValidationResult;
   onDragEnd: (shapeId: string, position: Position) => void;
-  onRemove: (shapeId: string) => void; // Nuovo: rimuove la forma
+  onRemove: (shapeId: string) => void;
+  isSelected?: boolean;
+  onSelect?: () => void;
 }
 
 /**
@@ -45,7 +47,9 @@ export const ShapeComponent: React.FC<ShapeComponentProps> = ({
   onDragStart,
   onDragMove,
   onDragEnd,
-  onRemove
+  onRemove,
+  isSelected = false,
+  onSelect
 }) => {
   const { cellSize, cellGap = 0 } = config;
   const totalCellSize = cellSize + cellGap;
@@ -55,8 +59,8 @@ export const ShapeComponent: React.FC<ShapeComponentProps> = ({
     valid: true,
     reason: 'valid'
   });
-  const [isLongPressing, setIsLongPressing] = useState(false);
-  const longPressTimerRef = useRef<number | null>(null);
+  const tapStartTimeRef = useRef<number>(0);
+  const tapStartPosRef = useRef<{ x: number; y: number } | null>(null);
 
   // Carica l'immagine UNICA della forma
   const shapeImagePath = getShapeImagePath(shape.shapeId);
@@ -90,12 +94,6 @@ export const ShapeComponent: React.FC<ShapeComponentProps> = ({
 
   // Handler drag start
   const handleDragStart = () => {
-    // Cancella il timer del long press se inizia il drag
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
-    }
-    setIsLongPressing(false);
     setIsDragging(true);
     onDragStart(shape.id);
   };
@@ -153,50 +151,45 @@ export const ShapeComponent: React.FC<ShapeComponentProps> = ({
   const [isHovered, setIsHovered] = useState(false);
 
   /**
-   * Handler per long press (mobile)
-   * Inizia il timer per rilevare un tap lungo
+   * Handler per tap (mobile)
+   * Registra l'inizio del tap e la posizione
    */
-  const handleTouchStart = () => {
-    setIsLongPressing(false);
-    longPressTimerRef.current = setTimeout(() => {
-      setIsLongPressing(true);
-      // Rimuovi la forma dopo long press
-      onRemove(shape.id);
-      showNotification('🗑️ Forma rimossa con tap lungo', 'info', 2000);
-    }, 600); // 600ms per il long press
-  };
-
-  /**
-   * Handler per cancellare il long press se l'utente rilascia o muove
-   */
-  const handleTouchEnd = () => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
+  const handleTouchStart = (e: Konva.KonvaEventObject<TouchEvent>) => {
+    tapStartTimeRef.current = Date.now();
+    const touch = e.evt.touches[0];
+    if (touch) {
+      tapStartPosRef.current = { x: touch.clientX, y: touch.clientY };
     }
-    setIsLongPressing(false);
   };
 
   /**
-   * Cleanup del timer quando il componente viene smontato
+   * Handler per fine tap (mobile)
+   * Se è un tap rapido e senza movimento significativo, seleziona la forma
    */
-  useEffect(() => {
-    return () => {
-      if (longPressTimerRef.current) {
-        clearTimeout(longPressTimerRef.current);
-      }
-    };
-  }, []);
+  const handleTouchEnd = (e: Konva.KonvaEventObject<TouchEvent>) => {
+    const tapDuration = Date.now() - tapStartTimeRef.current;
+    const touch = e.evt.changedTouches[0];
+    
+    // Calcola se c'è stato movimento significativo
+    let isSignificantMove = false;
+    if (touch && tapStartPosRef.current) {
+      const deltaX = Math.abs(touch.clientX - tapStartPosRef.current.x);
+      const deltaY = Math.abs(touch.clientY - tapStartPosRef.current.y);
+      isSignificantMove = deltaX > 10 || deltaY > 10; // Tolleranza 10px
+    }
+    
+    // Se è un tap rapido (< 300ms) e senza movimento, seleziona/deseleziona la forma
+    if (tapDuration < 300 && !isSignificantMove && !isDragging && onSelect) {
+      e.cancelBubble = true; // Previene la propagazione
+      onSelect();
+    }
+  };
 
-  // Determina opacità e overlay in base allo stato drag, sovrapposizione e long press
+  // Determina opacità e overlay in base allo stato drag e sovrapposizione
   let opacity = 1;
   let overlayColor = null;
 
-  if (isLongPressing) {
-    // Durante long press: arancione per indicare rimozione imminente
-    opacity = 0.7;
-    overlayColor = 'rgba(255, 152, 0, 0.6)'; // Arancione trasparente
-  } else if (isDragging) {
+  if (isDragging) {
     // Durante drag: verde se valido, rosso se non valido
     opacity = 0.85;
     if (validationState.valid) {
@@ -209,9 +202,9 @@ export const ShapeComponent: React.FC<ShapeComponentProps> = ({
     overlayColor = 'rgba(248, 113, 113, 0.4)'; // Rosso trasparente
   }
 
-  // Handler per rimozione diretta (click sul pulsante X)
-  const handleRemoveClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
-    e.cancelBubble = true; // Previene drag
+  // Handler per rimozione diretta (click/tap sul pulsante X)
+  const handleRemoveClick = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+    e.cancelBubble = true; // Previene drag e propagazione
     onRemove(shape.id);
     showNotification('🗑️ Forma rimossa dalla griglia', 'info', 2000);
   };
@@ -230,7 +223,6 @@ export const ShapeComponent: React.FC<ShapeComponentProps> = ({
       onMouseLeave={() => setIsHovered(false)}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      onTouchMove={handleTouchEnd}
     >
       {/* Immagine unica della forma */}
       {shapeImage ? (
@@ -278,47 +270,40 @@ export const ShapeComponent: React.FC<ShapeComponentProps> = ({
         />
       )}
 
-      {/* Pulsante rimozione (visibile solo in hover e non durante drag) */}
-      {isHovered && !isDragging && (
+      {/* Pulsante rimozione */}
+      {/* Desktop: visibile in hover | Mobile: visibile dopo tap (isSelected) */}
+      {(isHovered || isSelected) && !isDragging && (
         <Group
-          x={shapeWidth - 20}
-          y={-10}
+          x={shapeWidth / 2 - 22}
+          y={shapeHeight / 2 - 22}
           onClick={handleRemoveClick}
           onTap={handleRemoveClick}
         >
-          {/* Cerchio rosso di sfondo */}
-          <Rect
-            x={0}
-            y={0}
-            width={24}
-            height={24}
+          {/* Cerchio rosso di sfondo (più grande su mobile) */}
+          <Circle
+            x={22}
+            y={22}
+            radius={22}
             fill="#ef4444"
-            cornerRadius={12}
             shadowColor="black"
-            shadowBlur={4}
-            shadowOpacity={0.3}
+            shadowBlur={6}
+            shadowOpacity={0.4}
             shadowOffset={{ x: 0, y: 2 }}
+            opacity={isSelected ? 1 : 0.9}
           />
-          {/* Icona X */}
-          <Rect
-            x={6}
-            y={11}
-            width={12}
-            height={2}
-            fill="white"
-            rotation={45}
-            offsetX={0}
-            offsetY={1}
+          {/* Icona X - linea diagonale da alto-sinistra a basso-destra */}
+          <Line
+            points={[12, 12, 32, 32]}
+            stroke="white"
+            strokeWidth={3}
+            lineCap="round"
           />
-          <Rect
-            x={6}
-            y={11}
-            width={12}
-            height={2}
-            fill="white"
-            rotation={-45}
-            offsetX={0}
-            offsetY={1}
+          {/* Icona X - linea diagonale da alto-destra a basso-sinistra */}
+          <Line
+            points={[32, 12, 12, 32]}
+            stroke="white"
+            strokeWidth={3}
+            lineCap="round"
           />
         </Group>
       )}

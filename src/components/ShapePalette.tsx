@@ -142,11 +142,11 @@ export const ShapePalette: React.FC<ShapePaletteProps> = ({
         <div style={styles.instructions}>
           <h3 style={styles.instructionsTitle}>Istruzioni</h3>
           <ul style={styles.instructionsList}>
-            <li><strong>Click/Tap</strong> su una forma per aggiungerla</li>
-            <li><strong>Trascina</strong> direttamente sulla griglia</li>
-            <li><strong>Tap lungo</strong> (mobile) o <strong>hover + ❌</strong> (desktop) per rimuovere</li>
+            <li><strong>Click/Tap</strong> su una forma qui per aggiungerla</li>
+            <li><strong>Trascina</strong> le forme sulla griglia per spostarle</li>
+            <li><strong>Desktop:</strong> Passa il mouse su una forma → click ❌</li>
+            <li><strong>Mobile:</strong> Tap su una forma → tap sul pulsante ❌</li>
             <li>🟢 Verde = posizione valida durante drag</li>
-            <li>🟠 Arancione = tap lungo per rimuovere</li>
             <li>🔴 Rosso = posizione non valida o sovrapposizione</li>
           </ul>
         </div>
