@@ -18,7 +18,7 @@ import { showNotification } from './utils/notifications';
 const BASE_GRID_CONFIG = {
   rows: 8,
   cols: 5,
-  cellGap: 5 // Margine di 5px tra le celle
+  cellGap: 10 // Margine di 5px tra le celle
 };
 
 function App() {

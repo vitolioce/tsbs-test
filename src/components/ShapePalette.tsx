@@ -50,7 +50,7 @@ export const ShapePalette: React.FC<ShapePaletteProps> = ({
    */
   const getShapeImagePath = (shapeId: string): string => {
     const shapeMap: { [key: string]: string } = {
-      'I': '/shapes/shape-I.png',
+      /* 'I': '/shapes/shape-I.png',
       'F': '/shapes/shape-F.png',
       'Q': '/shapes/shape-Q.png',
       'G': '/shapes/shape-G.png',
@@ -60,7 +60,15 @@ export const ShapePalette: React.FC<ShapePaletteProps> = ({
       'Z': '/shapes/shape-Z.png',
       'S': '/shapes/shape-S.png',
       'J': '/shapes/shape-J.png',
-      'U': '/shapes/shape-U.png'
+      'U': '/shapes/shape-U.png' */
+      'G1': '/shapes/tartozza.png',
+      'L1': '/shapes/candela.png',
+      'A1': '/shapes/chiave.png',
+      'G2': '/shapes/scudo.png',
+      'O1': '/shapes/stendardo.png',
+      'F1': '/shapes/calice.png',
+      'C1': '/shapes/bandiera.png',
+      'F2': '/shapes/medaglia.png',
     };
     return shapeMap[shapeId] || '/shapes/shape-I.png';
   };

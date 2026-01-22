@@ -6,24 +6,56 @@
 
 import { ShapeDefinition, ShapeMatrix } from '../types';
 
+const C_SHAPE: ShapeMatrix = [
+  [1, 1],
+  [1, 0],
+  [1, 1]
+];
+
+const A_SHAPE: ShapeMatrix = [
+  [1, 1]
+];
+
+const O_SHAPE: ShapeMatrix = [
+  [1, 1],
+  [1, 1]
+];
+
+const F_SHAPE: ShapeMatrix = [
+  [1],
+  [1]
+];
+
+const G_SHAPE: ShapeMatrix = [
+  [1]
+];
+
+const L_SHAPE: ShapeMatrix = [
+  [1, 0],
+  [1, 0],
+  [1, 1]
+];
+
 /**
  * Forma I (barra orizzontale)
  * ■ ■ ■ ■
  */
-const I_SHAPE: ShapeMatrix = [
+/* const I_SHAPE: ShapeMatrix = [
   [1, 1, 1, 1]
-];
+]; */
+
+
 
 /**
  * Forma L (orizzontale)
  * ■ ■ ■
  * ■ □ □
  */
-const L_SHAPE: ShapeMatrix = [
+/* const L_SHAPE: ShapeMatrix = [
   [1, 1, 1],
   [1, 0, 0]
 ];
-
+ */
 /**
  * Forma T
  * ■ ■ ■
@@ -35,24 +67,14 @@ const L_SHAPE: ShapeMatrix = [
 ]; */
 
 /**
- * Forma O (quadrato)
- * ■ ■
- * ■ ■
- */
-const O_SHAPE: ShapeMatrix = [
-  [1, 1],
-  [1, 1]
-];
-
-/**
  * Forma Z
  * ■ ■ □
  * □ ■ ■
  */
-const Z_SHAPE: ShapeMatrix = [
+/* const Z_SHAPE: ShapeMatrix = [
   [1, 1],
   [0, 1]
-];
+]; */
 
 /**
  * Forma S (inversa di Z)
@@ -69,10 +91,10 @@ const Z_SHAPE: ShapeMatrix = [
  * ■ □ □
  * ■ ■ ■
  */
-const J_SHAPE: ShapeMatrix = [
+/* const J_SHAPE: ShapeMatrix = [
   [1, 0, 0],
   [1, 1, 1]
-];
+]; */
 
 /**
  * Forma U
@@ -84,91 +106,61 @@ const J_SHAPE: ShapeMatrix = [
   [1, 1, 1]
 ]; */
 
-const F_SHAPE: ShapeMatrix = [
-  [1],
-  [1]
-];
 
-const G_SHAPE: ShapeMatrix = [
-  [1]
-];
 
-const Q_SHAPE: ShapeMatrix = [
-  [0, 1, 0],
-  [1, 1, 1],
-  [1, 1, 1]
-];
 
 /**
  * Catalogo completo delle forme disponibili
  */
 export const SHAPE_DEFINITIONS: ShapeDefinition[] = [
   {
-    id: 'I',
-    name: 'Gems',
-    matrix: I_SHAPE,
+    id: 'G1',
+    name: 'Tartaruga',
+    matrix: G_SHAPE,
     color: '#00f0f0' // Cyan
   },
   {
-    id: 'F',
-    name: 'Oscar',
+    id: 'L1',
+    name: 'Candela',
+    matrix: L_SHAPE,
+    color: '#00f0f0' // Cyan
+  },
+  {
+    id: 'A1',
+    name: 'Chiave',
+    matrix: A_SHAPE,
+    color: '#00f0f0' // Cyan
+  },
+  {
+    id: 'G2',
+    name: 'Scudo',
+    matrix: G_SHAPE,
+    color: '#00f0f0' // Cyan
+  },
+  {
+    id: 'O1',
+    name: 'Stendardo',
+    matrix: O_SHAPE,
+    color: '#00f0f0' // Cyan
+  },
+  {
+    id: 'F1',
+    name: 'calice',
     matrix: F_SHAPE,
     color: '#00ff00' // Green
   },
   {
-    id: 'Q',
-    name: 'Potion',
-    matrix: Q_SHAPE,
-    color: '#f5d2f2' // Red
+    id: 'C1',
+    name: 'Bandiera',
+    matrix: C_SHAPE,
+    color: '#00f0f0' // Cyan
   },
   {
-    id: 'G',
-    name: 'G-Shape',
-    matrix: G_SHAPE,
-    color: '#0000ff' // Blue
-  },
-  {
-    id: 'L',
-    name: 'L-Shape',
-    matrix: L_SHAPE,
-    color: '#f0a000' // Orange
-  },
-  /* {
-    id: 'T',
-    name: 'T-Shape',
-    matrix: T_SHAPE,
-    color: '#a000f0' // Purple
-  }, */
-  {
-    id: 'O',
-    name: 'O-Shape',
-    matrix: O_SHAPE,
-    color: '#f0f000' // Yellow
-  },
-  {
-    id: 'Z',
-    name: 'Z-Shape',
-    matrix: Z_SHAPE,
-    color: '#f00000' // Red
-  },
-  /* {
-    id: 'S',
-    name: 'S-Shape',
-    matrix: S_SHAPE,
-    color: '#00f000' // Green
-  }, */
-  {
-    id: 'J',
-    name: 'J-Shape',
-    matrix: J_SHAPE,
-    color: '#0000f0' // Blue
-  },
-  /* {
-    id: 'U',
-    name: 'U-Shape',
-    matrix: U_SHAPE,
-    color: '#ff69b4' // Pink
-  }, */
+    id: 'F2',
+    name: 'Medaglia',
+    matrix: F_SHAPE,
+    color: '#00ff00' // Green
+  }
   
 ];
 
